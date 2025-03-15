@@ -30,7 +30,8 @@ public class AliOssUtil {
 
         // 创建OSSClient实例。
         OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
-
+        System.out.println("AccessKeyId: " + accessKeyId);
+        System.out.println("AccessKeySecret: " + accessKeySecret);
         try {
             // 创建PutObject请求。
             ossClient.putObject(bucketName, objectName, new ByteArrayInputStream(bytes));
