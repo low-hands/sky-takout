@@ -34,11 +34,12 @@ public class UserController {
     @ApiOperation("用户登录")
     public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO){
         User user = userService.wxlogin(userLoginDTO);
+        log.info("当前用户id:{}",user.getId());
         Map<String,Object> claims = new HashMap<>();
         claims.put(JwtClaimsConstant.USER_ID,user.getId());
         // 生成令牌
         String token = JwtUtil.createJWT(jwtProperties.getUserSecretKey(), jwtProperties.getUserTtl(), claims);
-       UserLoginVO userLoginVO = UserLoginVO.builder()
+        UserLoginVO userLoginVO = UserLoginVO.builder()
                 .id(user.getId())
                 .openid(user.getOpenid())
                 .token(token)
