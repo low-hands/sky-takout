@@ -21,6 +21,7 @@ import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import com.sky.websocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +55,8 @@ public class OrderServiceImpl implements OrderService {
     private AddressBookMapper addressBookMapper;
     @Autowired
     private WeChatPayUtil weChatPayUtil;
-
+    @Autowired
+    private WebSocketServer webSocketServer;
     @Value("${sky.shop.address}")
     private String shopAddress;
 
@@ -179,6 +181,17 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         orderMapper.update(orders);
+
+        // 以下为利用websocket服务完成用户下单提醒的功能
+        Map<Object, Object> hashMap = new HashMap<>();
+        // 1.代表来单提醒 2.代表用户催单
+        hashMap.put("type",1);
+        hashMap.put("orderId",ordersDB.getId());
+        hashMap.put("content","订单号" + outTradeNo);
+        hashMap.put("content","订单号：" + outTradeNo);
+
+        webSocketServer.sendToAllClient(JSON.toJSONString(hashMap));
+
     }
 
     /**
@@ -510,6 +523,23 @@ public class OrderServiceImpl implements OrderService {
         orders.setDeliveryTime(LocalDateTime.now());
 
         orderMapper.update(orders);
+    }
+
+    @Override
+    public void reminderOrders(Long orderId) {
+        Orders ordersDatabase = orderMapper.getById(orderId);
+
+        // 校验订单是否存在
+        if (ordersDatabase == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        // 以下为利用websocket服务完成用户催单的功能
+        Map<Object, Object> hashMap = new HashMap<>();
+        // 1.代表来单提醒 2.代表用户催单
+        hashMap.put("type",2);
+        hashMap.put("orderId",orderId);
+        hashMap.put("content","订单号：" + ordersDatabase.getNumber());
+        webSocketServer.sendToAllClient(JSON.toJSONString(hashMap));
     }
 
     /**
