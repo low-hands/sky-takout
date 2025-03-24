@@ -6,8 +6,6 @@ import com.sky.mapper.OrderMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.service.ReportService;
 import com.sky.vo.*;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.models.auth.In;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -75,9 +73,9 @@ public class ReportServiceImpl implements ReportService {
             LocalDateTime endTime = LocalDateTime.of(date, LocalTime.MAX);
             Map map = new HashMap();
             map.put("end",endTime);
-            totalUserList.add(userMapper.countById(map));
+            totalUserList.add(userMapper.countByMap(map));
             map.put("begin",beginTime);
-            newUserList.add(userMapper.countById(map));
+            newUserList.add(userMapper.countByMap(map));
         }
         return UserReportVO.builder()
                 .dateList(StringUtils.join(dateList,","))
