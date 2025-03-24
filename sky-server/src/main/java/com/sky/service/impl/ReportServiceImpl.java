@@ -1,13 +1,11 @@
 package com.sky.service.impl;
 
+import com.sky.dto.GoodsSalesDTO;
 import com.sky.entity.Orders;
 import com.sky.mapper.OrderMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.service.ReportService;
-import com.sky.vo.OrderReportVO;
-import com.sky.vo.TurnoverReportVO;
-import com.sky.vo.UserLoginVO;
-import com.sky.vo.UserReportVO;
+import com.sky.vo.*;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.models.auth.In;
 import org.apache.commons.lang3.StringUtils;
@@ -21,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ReportServiceImpl implements ReportService {
@@ -122,6 +121,29 @@ public class ReportServiceImpl implements ReportService {
                 .orderCompletionRate(orderCompleteRate).build();
     }
 
+    @Override
+    public SalesTop10ReportVO getSalesTop10(LocalDate begin, LocalDate end) {
+        // 查销量
+        // select name, sum(number) n from orders o order_details od where od.order_id = o.id and
+        // status = 5 and o.order_time > ? and o.order_time < ? group by od.name order by n desc
+        // limit 0,10
+        LocalDateTime beginTime = LocalDateTime.of(begin, LocalTime.MIN);
+        LocalDateTime endTime = LocalDateTime.of(end, LocalTime.MAX);
+        List<GoodsSalesDTO> topList = orderMapper.getSalesTop(beginTime,endTime);
+        List<String> nameList = new ArrayList<>();
+        List<Integer> numberList = new ArrayList<>();
+//        for(GoodsSalesDTO goodsSalesDTO : topList){
+//            nameList.add(goodsSalesDTO.getName());
+//            numberList.add(goodsSalesDTO.getNumber());
+//        }
+        nameList = topList.stream().map(GoodsSalesDTO::getName).collect(Collectors.toList());
+        numberList = topList.stream().map(GoodsSalesDTO::getNumber).collect(Collectors.toList());
+        return SalesTop10ReportVO.builder()
+                .nameList(StringUtils.join(nameList,","))
+                .numberList(StringUtils.join(numberList,","))
+                .build();
+    }
+
     private Integer getOrderCount(LocalDateTime begin, LocalDateTime end, Integer status) {
         Map map = new HashMap();
         map.put("begin",begin);
@@ -130,4 +152,6 @@ public class ReportServiceImpl implements ReportService {
 
         return orderMapper.countByMap(map);
     }
+
+
 }
